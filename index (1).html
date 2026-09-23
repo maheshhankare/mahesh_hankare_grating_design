@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Steel Grating Design Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EDF0; --panel:#F7F9FA; --ink:#17212B; --muted:#5B6874; --line:#C9D1D8;
+  --steel:#2F5D7C; --steel-soft:#D6E2EB; --signal:#E8A800; --ok:#2E7D4F; --ok-soft:#DCEFE3;
+  --bad:#B63A2E; --bad-soft:#F6DEDA; --warn:#9A6B00; --field:#FFFFFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141A20; --panel:#1C242C; --ink:#E6ECF1; --muted:#9AA7B3; --line:#33404C;
+  --steel:#7FB0D3; --steel-soft:#24384A; --signal:#F2B705; --ok:#5CC08A; --ok-soft:#1D3A2A;
+  --bad:#F08A7E; --bad-soft:#3E2320; --warn:#E3B341; --field:#111820; } }
+:root[data-theme="dark"]{
+  --bg:#141A20; --panel:#1C242C; --ink:#E6ECF1; --muted:#9AA7B3; --line:#33404C;
+  --steel:#7FB0D3; --steel-soft:#24384A; --signal:#F2B705; --ok:#5CC08A; --ok-soft:#1D3A2A;
+  --bad:#F08A7E; --bad-soft:#3E2320; --warn:#E3B341; --field:#111820; }
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
+header.top{padding:28px 32px 18px;border-bottom:3px solid var(--steel);background:var(--panel)}
+header.top h1{margin:0;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;font-size:clamp(24px,3.2vw,34px);letter-spacing:-0.01em}
+header.top p{margin:6px 0 0;color:var(--muted);max-width:72ch}
+.wrap{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:0;min-height:calc(100vh - 110px)}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:18px 20px 40px;overflow:auto}
+main{padding:22px 28px 60px;min-width:0}
+details.grp{border-top:1px solid var(--line);padding:10px 0}
+details.grp>summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+details.grp>summary::after{content:"+";color:var(--muted);font-weight:400}
+details.grp[open]>summary::after{content:"−"}
+.f{display:grid;grid-template-columns:1fr 112px;gap:8px;align-items:center;margin:7px 0}
+.f label{font-size:13.5px;color:var(--ink)}
+.f label small{display:block;color:var(--muted);font-size:12px}
+.f input,.f select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--field);color:var(--ink);font:inherit;font-size:14px;text-align:right}
+.f select{text-align:left}
+.f .u{display:none}
+.pair{display:grid;grid-template-columns:1fr 52px 52px;gap:6px;align-items:center;margin:7px 0}
+.pair input{width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--field);color:var(--ink);font:inherit;font-size:14px;text-align:right}
+.pair label{font-size:13.5px}
+.pair label small{display:block;color:var(--muted);font-size:12px}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--signal);outline-offset:1px}
+.tog{display:flex;gap:10px;align-items:flex-start;margin:9px 0;font-size:13.5px}
+.tog input{margin-top:3px;accent-color:var(--steel)}
+.btns{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+button{font:inherit;font-size:14px;border-radius:4px;padding:8px 14px;cursor:pointer;border:1px solid var(--steel);background:var(--steel);color:#fff}
+button.ghost{background:transparent;color:var(--steel)}
+.verdict{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;padding:20px 22px;border-radius:6px;border-left:8px solid var(--ok);background:var(--ok-soft)}
+.verdict.bad{border-left-color:var(--bad);background:var(--bad-soft)}
+.verdict .big{font-family:"IBM Plex Sans Condensed",sans-serif;font-size:52px;font-weight:600;line-height:1}
+.verdict .big small{display:block;font-size:13px;font-weight:500;color:var(--muted);font-family:"IBM Plex Sans",sans-serif;margin-top:6px}
+.verdict h2{margin:0 0 4px;font-size:20px}
+.verdict p{margin:0;color:var(--ink)}
+section.blk{margin-top:28px}
+section.blk>h3{font-size:17px;margin:0 0 10px;font-weight:600}
+section.blk>p.lead{margin:-4px 0 12px;color:var(--muted);max-width:80ch}
+.diagram{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;overflow-x:auto}
+.diagram svg{display:block;width:100%;max-width:880px;height:auto;margin:0 auto}
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.g{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.g .t{font-size:13px;color:var(--muted)}
+.g .v{font-size:26px;font-weight:600;margin:2px 0}
+.g .w{font-size:12.5px;color:var(--muted)}
+.bar{height:6px;background:var(--steel-soft);border-radius:3px;position:relative;overflow:hidden;margin-top:6px}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ok)}
+.bar i.bad{background:var(--bad)}
+.bar::after{content:"";position:absolute;left:calc(100%/1.5);top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.5}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--steel-soft);font-weight:600;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.st{font-weight:600;white-space:nowrap}
+.st.ok{color:var(--ok)} .st.bad{color:var(--bad)} .st.na{color:var(--muted);font-weight:400}
+td .ubar{width:90px;display:inline-block;vertical-align:middle;margin-left:8px}
+tr.grp td{background:var(--bg);font-weight:600}
+.note{font-size:13px;color:var(--muted);max-width:90ch}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:4px 24px;font-size:13.5px}
+.kv div{display:flex;justify-content:space-between;border-bottom:1px dotted var(--line);padding:4px 0}
+.kv span:last-child{font-weight:500}
+.err{color:var(--bad);font-size:13px;margin-top:8px}
+footer{padding:18px 32px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line)}
+@media (max-width:900px){.wrap{grid-template-columns:1fr} aside{border-right:0;border-bottom:1px solid var(--line)} main{padding:18px 16px 50px} header.top{padding:20px 16px 14px}}
+@media print{aside,.btns,header.top p{display:none}.wrap{display:block}body{background:#fff}main{padding:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Steel grating design check</h1>
+  <p>Enter the grating, loads and panel details. Results update as you type: bearing bars, crossbars, joints and deflection are checked to EN 1993-1-1 / EN 1993-1-5, with load sharing between bars from an orthotropic-plate analysis.</p>
+</header>
+<div class="wrap">
+<aside>
+  <form id="frm" autocomplete="off" onsubmit="return false">
+  <details class="grp" open><summary>Grating geometry</summary>
+    <div class="f"><label for="h">Bearing bar height, h<small>mm</small></label><input id="h" type="number" step="any" value="50"></div>
+    <div class="f"><label for="b">Bearing bar thickness, b<small>mm</small></label><input id="b" type="number" step="any" value="2"></div>
+    <div class="f"><label for="a">Bearing bar spacing (c/c), a<small>mm</small></label><input id="a" type="number" step="any" value="66"></div>
+    <div class="f"><label for="h1">Crossbar height, h1<small>mm</small></label><input id="h1" type="number" step="any" value="12"></div>
+    <div class="f"><label for="b1">Crossbar thickness, b1<small>mm</small></label><input id="b1" type="number" step="any" value="1.6"></div>
+    <div class="f"><label for="c">Crossbar spacing (c/c), c<small>mm</small></label><input id="c" type="number" step="any" value="11"></div>
+    <div class="f"><label for="L">Clear span of bearing bars, L<small>mm, support to support</small></label><input id="L" type="number" step="any" value="1200"></div>
+    <div class="f"><label for="fy">Steel yield strength, fy<small>N/mm²</small></label><input id="fy" type="number" step="any" value="235"></div>
+  </details>
+  <details class="grp" open><summary>Loads</summary>
+    <div class="f"><label for="UDL">Uniformly distributed load<small>kg/m²</small></label><input id="UDL" type="number" step="any" value="900"></div>
+    <div class="f"><label for="Pp">Point load<small>kg</small></label><input id="Pp" type="number" step="any" value="100"></div>
+    <div class="pair"><label>Point load footprint<small>length along bars × width across, mm</small></label><input id="Bpx" type="number" step="any" value="100" aria-label="Point footprint length"><input id="Bpy" type="number" step="any" value="50" aria-label="Point footprint width"></div>
+    <div class="f"><label for="equip">Moving equipment</label><select id="equip"><option value="HPT">Hand pallet truck (3 wheels)</option><option value="OTHER">Other (4 wheels)</option></select></div>
+    <div class="f"><label for="Qeq">Load on equipment<small>kg, excluding self-weight</small></label><input id="Qeq" type="number" step="any" value="400"></div>
+    <div class="f"><label for="SWeq">Equipment self-weight<small>kg</small></label><input id="SWeq" type="number" step="any" value="100"></div>
+    <div class="f"><label for="wheelOverride">Wheel load override<small>kg, 0 = calculate from equipment</small></label><input id="wheelOverride" type="number" step="any" value="0"></div>
+    <div class="pair"><label>Wheel footprint<small>length along bars × width across, mm</small></label><input id="Bwx" type="number" step="any" value="25" aria-label="Wheel footprint length"><input id="Bwy" type="number" step="any" value="25" aria-label="Wheel footprint width"></div>
+  </details>
+  <details class="grp" open><summary>Safety factors</summary>
+    <div class="f"><label for="gQ">Imposed load factor, γQ</label><input id="gQ" type="number" step="any" value="1.5"></div>
+    <div class="f"><label for="gG">Self-weight factor, γG</label><input id="gG" type="number" step="any" value="1.35"></div>
+    <div class="f"><label for="gM">Material factor, γM</label><input id="gM" type="number" step="any" value="1.1"></div>
+    <div class="f"><label for="phi">Dynamic factor on wheel, φ</label><input id="phi" type="number" step="any" value="1"></div>
+  </details>
+  <details class="grp"><summary>Panel and support</summary>
+    <div class="f"><label for="Wp">Panel width across bars<small>mm</small></label><input id="Wp" type="number" step="any" value="1000"></div>
+    <div class="f"><label for="ls">Seating length each end<small>mm</small></label><input id="ls" type="number" step="any" value="30"></div>
+    <label class="tog"><input id="edge" type="checkbox" checked><span>Loads can reach a free panel edge or unconnected panel joint</span></label>
+    <label class="tog"><input id="adj" type="checkbox"><span>Second wheel alongside on the same panel</span></label>
+    <div class="f"><label for="s">Wheel spacing across bars (c/c)<small>mm</small></label><input id="s" type="number" step="any" value="400"></div>
+  </details>
+  <details class="grp"><summary>Connection and limits</summary>
+    <div class="f"><label for="dn">Slot depth in bearing bar<small>mm, 0 = full section</small></label><input id="dn" type="number" step="any" value="0"></div>
+    <div class="f"><label for="h1net">Crossbar net height at joint<small>mm</small></label><input id="h1net" type="number" step="any" value="6"></div>
+    <div class="f"><label for="FjUser">Tested joint capacity<small>N, 0 = calculate</small></label><input id="FjUser" type="number" step="any" value="0"></div>
+    <div class="f"><label for="nlim">Deflection limit, span /</label><input id="nlim" type="number" step="any" value="200"></div>
+    <div class="f"><label for="wabs">Max deflection under point / wheel<small>mm</small></label><input id="wabs" type="number" step="any" value="4"></div>
+    <div class="f"><label for="Dball">Test sphere diameter<small>mm</small></label><input id="Dball" type="number" step="any" value="35"></div>
+  </details>
+  <details class="grp"><summary>Material constants</summary>
+    <div class="f"><label for="E">Elastic modulus, E<small>N/mm²</small></label><input id="E" type="number" step="any" value="210000"></div>
+    <div class="f"><label for="nu">Poisson's ratio</label><input id="nu" type="number" step="any" value="0.3"></div>
+    <div class="f"><label for="rho">Density<small>kg/m³</small></label><input id="rho" type="number" step="any" value="7850"></div>
+    <div class="f"><label for="aLT">Buckling imperfection factor, αLT</label><input id="aLT" type="number" step="any" value="0.76"></div>
+  </details>
+  <details class="grp"><summary>Crossbar spacings to compare</summary>
+    <div class="f" style="grid-template-columns:1fr"><label for="trials">Spacings in mm, separated by commas</label><input id="trials" type="text" value="11, 22, 33, 38, 44, 50, 66, 76, 100, 132" style="text-align:left"></div>
+  </details>
+  <div id="err" class="err" role="alert"></div>
+  <div class="btns"><button type="button" id="print">Print report</button><button type="button" class="ghost" id="reset">Reset inputs</button></div>
+  </form>
+</aside>
+<main id="out" aria-live="polite"></main>
+</div>
+<footer>Method: orthotropic-plate load distribution (Fourier series with beam-on-elastic-foundation solution across the bars), member checks to EN 1993-1-1 and EN 1993-1-5, loads to EN 1990 / EN 1991-1-1, deflection limits per EN ISO 14122-2 and RAL-GZ 638. Results are for engineering guidance and should be reviewed by a qualified engineer.</footer>
+
+<script>
+// Grating design engine — mirrors the "Grating Design" workbook.
+// Footprints are rectangular: Bx = length along bearing bars, By = width across bearing bars.
+function gratingCalc(I) {
+  const PI = Math.PI, sqrt = Math.sqrt, exp = Math.exp, sin = Math.sin, cos = Math.cos;
+  const R = {};
+  const h = I.h, b = I.b, h1 = I.h1, b1 = I.b1, a = I.a, c = I.c, fy = I.fy, L = I.L;
+  const E = I.E, nu = I.nu, gM = I.gM, gQ = I.gQ, gG = I.gG, phi = I.phi, g = I.g;
+  const Wp = I.Wp, adj = I.adj ? 1 : 0, edge = I.edge ? 1 : 0, s = I.s;
+
+  // wheel load from equipment (workbook: HPT -> round((Q+SW)*0.333), else (Q+SW)/4)
+  let Pw = I.wheelOverride > 0 ? I.wheelOverride
+    : (I.equip === 'HPT' ? Math.round((I.Qeq + I.SWeq) * 0.333) : (I.Qeq + I.SWeq) / 4);
+  R.Pw_kg = Pw;
+
+  // loads
+  const teq = b * h / a + b1 * h1 / c;
+  const gsw = I.rho * teq / 1000;
+  const gk = gsw * g / 1e6, qk = I.UDL * g / 1e6;
+  const Ppk = I.Pp * g, Pwk = Pw * g;
+  const qEd = gG * gk + gQ * qk, PpEd = gQ * Ppk, PwEd = gQ * phi * Pwk;
+  Object.assign(R, { teq, gsw, gk, qk, Ppk, Pwk, qEd, PpEd, PwEd });
+
+  // sections
+  const A = b * h, Ib = b * h ** 3 / 12, hn = h - I.dn, An = b * hn, Wel = b * hn * hn / 6;
+  const Iz = h * b ** 3 / 12, It = h * b ** 3 / 3 * (1 - 0.63 * b / h);
+  const A1 = b1 * h1, I1 = b1 * h1 ** 3 / 12, W1 = b1 * h1 * h1 / 6;
+  const Iz1 = h1 * b1 ** 3 / 12, It1 = h1 * b1 ** 3 / 3 * (1 - 0.63 * b1 / h1);
+  const G = E / (2 * (1 + nu));
+  const Nbb = Math.floor(Wp / a) + 1, Lp = L + 2 * I.ls, Ncb = Math.floor(Lp / c) + 1;
+  const Dx = E * Ib / a, Dy = E * I1 / c;
+  const lam1 = PI / L * Math.pow(Dx / (4 * Dy), 0.25);
+  Object.assign(R, { A, Ib, An, Wel, Iz, It, A1, I1, W1, G, Nbb, Lp, Ncb, Dx, Dy, lam1, beff1: 2 / lam1 });
+  R.U_open = Math.min(a - b, c - b1) / I.Dball;
+
+  // resistances
+  const fyd = fy / gM, eps = sqrt(235 / fy);
+  const chiLT = (Wm, Mcr) => { const l = sqrt(Wm * fy / Mcr); const p = 0.5 * (1 + I.aLT * (l - 0.2) + l * l); return [l, Math.min(1, 1 / (p + sqrt(p * p - l * l)))]; };
+  const MRd = Wel * fy / gM;
+  const Mcr = PI / c * sqrt(E * Iz * G * It);
+  const [lamLT, chi] = chiLT(Wel, Mcr);
+  const MbRd = chi * MRd, VRd = An * fy / (sqrt(3) * gM);
+  const U_sb = (h / b) / (72 * eps / 1.2);
+  const kF = 6 + 2 * (h / L) ** 2, Fcr = 0.9 * kF * E * b ** 3 / h;
+  const FRd = ly => Math.min(1, 0.5 / sqrt(ly * b * fy / Fcr)) * ly * b * fy / gM;
+  const MRd1 = W1 * fy / gM, Mcr1 = PI / a * sqrt(E * Iz1 * G * It1);
+  const [lamLT1, chi1] = chiLT(W1, Mcr1);
+  const MbRd1 = chi1 * MRd1, VRd1 = A1 * fy / (sqrt(3) * gM);
+  const Vnode = b1 * I.h1net * fy / (sqrt(3) * gM), Fbear = b * b1 * fy / gM;
+  const FjRd = I.FjUser > 0 ? I.FjUser : Math.min(Vnode, Fbear);
+  Object.assign(R, { fyd, MRd, Mcr, lamLT, chi, MbRd, VRd, U_sb, Fcr, MRd1, Mcr1, lamLT1, chi1, MbRd1, VRd1, Vnode, Fbear, FjRd });
+
+  // Fourier series (odd n = 1..99), generic in spacing factor k
+  const Ff = x => ((1 + exp(-2 * x)) / 2 + (cos(x) + 2) * exp(-x)) / ((1 - exp(-2 * x)) / 2 + sin(x) * exp(-x));
+  const Fe = x => ((1 - exp(-4 * x)) / 4 - sin(x) * cos(x) * exp(-2 * x)) / ((1 - exp(-2 * x)) ** 2 / 4 - sin(x) ** 2 * exp(-2 * x));
+  const fu = u => exp(-u) * (sin(u) - cos(u));
+  function series(P, Bx, By, withAdj, k) {
+    const p = P / (Bx * By);
+    const out = { Mi: 0, di: 0, Me: 0, de: 0, mcb: 0, vcb: 0, psi1: [] };
+    for (let n = 1; n <= 99; n += 2) {
+      const al = n * PI / L, lam = al * Math.pow(Dx / (4 * Dy), 0.25) * k, x = lam * Wp;
+      const Q = 4 * p / (n * PI) * sin(n * PI * Bx / (2 * L));
+      const F = Ff(x), FE = Fe(x), cc = By / 2;
+      const eta = 1 - exp(-lam * cc) * cos(lam * cc);
+      const ea = withAdj ? 0.5 * (exp(-lam * (s - cc)) * cos(lam * (s - cc)) - exp(-lam * (s + cc)) * cos(lam * (s + cc))) : 0;
+      const psi = Math.min(1, a / By * eta * F) + a / By * ea * F;
+      const ee = 1 + exp(-lam * By) * (sin(lam * By) - cos(lam * By));
+      const eea = withAdj ? fu(lam * (s + By)) - fu(lam * s) : 0;
+      const psie = Math.min(1, a / By * ee * FE) + a / By * eea * FE;
+      out.Mi += Q * By * psi / al ** 2; out.di += Q * By * psi / al ** 4 / (E * Ib);
+      out.Me += Q * By * psie / al ** 2; out.de += Q * By * psie / al ** 4 / (E * Ib);
+      out.mcb += Q / (2 * lam * lam) * exp(-lam * cc) * sin(lam * cc);
+      out.vcb += Q / (4 * lam) * (1 + exp(-lam * By) * (sin(lam * By) - cos(lam * By)));
+    }
+    return out;
+  }
+  // transverse load profile across bars (1st harmonic shape, for the diagram)
+  R.profile = (By) => {
+    const pts = []; for (let j = -6; j <= 6; j++) { const y = Math.abs(j * a), cc = By / 2, l = lam1;
+      let v; if (y <= cc) v = 1 - 0.5 * exp(-l * (cc - y)) * cos(l * (cc - y)) - 0.5 * exp(-l * (cc + y)) * cos(l * (cc + y));
+      else v = 0.5 * (exp(-l * (y - cc)) * cos(l * (y - cc)) - exp(-l * (y + cc)) * cos(l * (y + cc)));
+      pts.push(v); } return pts; };
+
+  function evaluate(cS, k) {
+    const cs = cS;
+    const gkS = I.rho * (b * h / a + b1 * h1 / cS) / 1000 * g / 1e6;
+    const qEdS = gG * gkS + gQ * qk;
+    const [, chiS] = chiLT(Wel, PI / cS * sqrt(E * Iz * G * It));
+    const MbS = chiS * MRd;
+    const Sp = series(Ppk, I.Bpx, I.Bpy, false, k);
+    const Sw = series(Pwk, I.Bwx, I.Bwy, !!adj, k);
+    const Mg = gG * gkS * a * L * L / 8;
+    const o = { Sp, Sw, chi: chiS };
+    // A
+    o.A1M = qEdS * a * L * L / 8 / MbS; o.A1V = qEdS * a * L / 2 / VRd;
+    o.A2M = (Mg + gQ * Sp.Mi) / MbS; o.A3M = (Mg + gQ * Sp.Me) / MbS;
+    o.A4M = (Mg + gQ * phi * Sw.Mi) / MbS; o.A5M = (Mg + gQ * phi * Sw.Me) / MbS;
+    const shear = (PEd, Bx, By) => (gG * gkS * a * L / 2 + PEd * Math.min(1, a / By) * (1 - Bx / (2 * L))) / VRd;
+    o.A2V = shear(PpEd, I.Bpx, I.Bpy); o.A4V = shear(PwEd, I.Bwx, I.Bwy);
+    const psiP = Sp.Mi / (Ppk * (2 * L - I.Bpx) / 8), psiW = Sw.Mi / (Pwk * (2 * L - I.Bwx) / 8);
+    o.psiP = psiP; o.psiW = psiW;
+    const vm = (M, V) => sqrt((M / Wel) ** 2 + 3 * (1.5 * V / An) ** 2) / fyd;
+    o.A2VM = vm(Mg + gQ * Sp.Mi, PpEd * psiP / 2); o.A4VM = vm(Mg + gQ * phi * Sw.Mi, PwEd * psiW / 2);
+    o.A2F = PpEd * Math.min(1, a / I.Bpy) / FRd(I.Bpx); o.A4F = PwEd * Math.min(1, a / I.Bwy) / FRd(I.Bwx);
+    // B
+    o.B1pM = gQ * cs * Sp.mcb / MbRd1; o.B1wM = gQ * phi * cs * Sw.mcb / MbRd1;
+    o.B1V = Math.max(gQ * cs * Sp.vcb, gQ * phi * cs * Sw.vcb) / VRd1;
+    o.B2uM = qEdS * cs * a * a / 8 / MbRd1;
+    const loc = (PEd, Bx, By) => { const nn = Math.max(1, Math.floor(Bx / cs)); const P1 = PEd / nn * Math.min(1, a / By);
+      const M = P1 * (2 * a - Math.min(By, a)) / 8 + gG * gkS * cs * a * a / 8, V = P1 / 2;
+      return { nn, P1, M: M / MbRd1, V: V / VRd1, VM: sqrt((M / W1) ** 2 + 3 * (1.5 * V / A1) ** 2) / fyd }; };
+    o.B2p = loc(PpEd, I.Bpx, I.Bpy); o.B2w = loc(PwEd, I.Bwx, I.Bwy);
+    // C
+    o.Fnode = Math.max(qEdS * cs * a, o.B2p.P1 / 2, o.B2w.P1 / 2, gQ * cs * Sp.vcb, gQ * phi * cs * Sw.vcb);
+    o.C = o.Fnode / FjRd;
+    // D
+    const limq = L / I.nlim, limP = Math.min(L / I.nlim, I.wabs);
+    o.dq = 5 * qk * a * L ** 4 / (384 * E * Ib);
+    o.D1 = o.dq / limq; o.D2 = Sp.di / limP; o.D3 = Sp.de / limP; o.D4 = Sw.di / limP; o.D5 = Sw.de / limP;
+    o.limq = limq; o.limP = limP;
+    o.UA = Math.max(o.A1M, o.A1V, o.A2M, o.A2V, o.A2VM, o.A2F, edge * o.A3M, o.A4M, o.A4V, o.A4VM, o.A4F, edge * o.A5M);
+    o.UB = Math.max(o.B1pM, o.B1wM, o.B1V, o.B2uM, o.B2p.M, o.B2p.V, o.B2p.VM, o.B2w.M, o.B2w.V, o.B2w.VM);
+    o.UC = o.C;
+    o.UD = Math.max(o.D1, o.D2, edge * o.D3, o.D4, edge * o.D5);
+    o.Ugeo = Math.max(R.U_open, U_sb, adj ? I.Bwy / s : 0);
+    o.Umax = Math.max(o.UA, o.UB, o.UC, o.UD, o.Ugeo);
+    return o;
+  }
+  const D = evaluate(c, 1);
+  R.D = D;
+  R.trials = (I.trials || []).map(ct => { const o = evaluate(ct, Math.pow(ct / c, 0.25));
+    return { c: ct, Ncb: Math.floor(Lp / ct) + 1, beff: 2 / (lam1 * Math.pow(ct / c, 0.25)), chi: o.chi, UA: o.UA, UB: o.UB, UC: o.UC, UD: o.UD, Umax: o.Umax }; });
+  const ok = R.trials.filter(t => t.Umax <= 1).map(t => t.c);
+  R.cRec = ok.length ? Math.max(...ok) : null;
+  R.nRec = R.cRec ? Math.floor(Lp / R.cRec) + 1 : null;
+  return R;
+}
+
+
+</script>
+<script>
+(function(){
+const ids=['h','b','a','h1','b1','c','L','fy','UDL','Pp','Bpx','Bpy','Qeq','SWeq','wheelOverride','Bwx','Bwy','gQ','gG','gM','phi','Wp','ls','s','dn','h1net','FjUser','nlim','wabs','Dball','E','nu','rho','aLT'];
+const $=id=>document.getElementById(id);
+const defaults={}; ids.forEach(i=>defaults[i]=$(i).value); defaults.equip=$('equip').value; defaults.edge=$('edge').checked; defaults.adj=$('adj').checked; defaults.trials=$('trials').value;
+function num(x,d=3){ if(!isFinite(x)) return '–'; const ax=Math.abs(x); return ax>=10000? Math.round(x).toLocaleString('en-US').replace(/,/g,' ') : x.toFixed(ax>=100?1:d); }
+function fmt(x,d){return num(x,d)}
+function status(u,na){ if(na) return '<span class="st na">Not checked</span>'; return u<=1?'<span class="st ok">OK</span>':'<span class="st bad">Not OK</span>'; }
+function ubar(u,na){ if(na) return ''; const w=Math.min(u/1.5,1)*100; return `<span class="bar ubar"><i class="${u>1?'bad':''}" style="width:${w}%"></i></span>`; }
+function row(ch,pos,u,na){ return `<tr><td>${ch}</td><td>${pos}</td><td class="n">${na?'–':u.toFixed(3)}${ubar(u,na)}</td><td>${status(u,na)}</td></tr>`; }
+function read(){
+  const I={}; const bad=[];
+  ids.forEach(i=>{ const v=parseFloat($(i).value); I[i]=v; if(!isFinite(v)) bad.push($(i).closest('div').querySelector('label').firstChild.textContent.trim()); });
+  I.equip=$('equip').value; I.edge=$('edge').checked; I.adj=$('adj').checked; I.g=9.81;
+  I.trials=$('trials').value.split(/[,; ]+/).map(Number).filter(v=>isFinite(v)&&v>0);
+  const pos=['h','b','a','h1','b1','c','L','fy','Bpx','Bpy','Bwx','Bwy','gQ','gM','Wp','nlim','wabs','E','rho'];
+  pos.forEach(i=>{ if(isFinite(I[i]) && I[i]<=0) bad.push($(i).closest('div').querySelector('label').firstChild.textContent.trim()+' must be greater than 0'); });
+  if(I.dn>=I.h) bad.push('Slot depth must be less than the bearing bar height');
+  if(I.adj && I.s<I.Bwy) bad.push('Wheel spacing must be at least the wheel footprint width');
+  if(I.Bpx>=2*I.L||I.Bwx>=2*I.L) bad.push('Footprint length must be shorter than the span');
+  if(!I.trials.length) I.trials=[I.c];
+  return {I,bad};
+}
+function diagram(I,R){
+  const prof=R.profile(I.Bwy), n=prof.length, W=860, H=300, cx=W/2, pad=40;
+  const sp=Math.min(56,(W-2*pad)/(n-1)), x0=cx-sp*(n-1)/2;
+  const scale=sp/I.a; const fw=I.Bwy*scale, fl=Math.min(I.Bwx*scale,90);
+  let g='';
+  // crossbars
+  const cy0=40, cy1=150; const cpx=Math.max(4,I.c*scale);
+  for(let y=cy0;y<=cy1;y+=cpx) g+=`<line x1="${x0-12}" x2="${x0+sp*(n-1)+12}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1.2"/>`;
+  // bearing bars
+  for(let j=0;j<n;j++){ const x=x0+j*sp; g+=`<line x1="${x}" x2="${x}" y1="${cy0-10}" y2="${cy1+10}" stroke="var(--steel)" stroke-width="3"/>`; }
+  // footprint
+  g+=`<rect x="${cx-fw/2}" y="${(cy0+cy1)/2-fl/2}" width="${fw}" height="${fl}" fill="var(--signal)" fill-opacity=".85" stroke="var(--ink)" stroke-width="1"/>`;
+  // share bars
+  const base=H-30, mh=100, mx=Math.max(...prof);
+  for(let j=0;j<n;j++){ const x=x0+j*sp, v=Math.max(prof[j],0)/mx*mh;
+    g+=`<rect x="${x-sp*0.28}" y="${base-v}" width="${sp*0.56}" height="${v}" fill="var(--steel)" fill-opacity="${j===(n-1)/2?1:.55}"/>`; }
+  g+=`<line x1="${x0-20}" x2="${x0+sp*(n-1)+20}" y1="${base}" y2="${base}" stroke="var(--ink)" stroke-width="1"/>`;
+  g+=`<text x="${x0-20}" y="${cy0-18}" fill="var(--muted)" font-size="12">Plan at midspan: bearing bars (blue), crossbars (grey), wheel footprint (yellow)</text>`;
+  g+=`<text x="${x0-20}" y="${base+20}" fill="var(--muted)" font-size="12">Relative load taken by each bar under the wheel (fundamental mode)</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Load sharing across bearing bars">${g}</svg>`;
+}
+function render(){
+  const {I,bad}=read(); const out=$('out');
+  $('err').textContent=bad.length?('Check inputs: '+bad.join('; ')+'.'):'';
+  if(bad.length){ out.innerHTML='<p class="note">Results appear once every input is a valid number.</p>'; return; }
+  let R; try{ R=gratingCalc(I);}catch(e){ out.innerHTML='<p class="err">Calculation failed: '+e.message+'</p>'; return; }
+  const D=R.D, E=!I.edge;
+  const checks=[
+    ['A','Bearing bar bending (incl. lateral buckling)','UDL',D.A1M],
+    ['A','Bearing bar shear','UDL, at support',D.A1V],
+    ['A','Bearing bar bending','Point load on a bar, midspan',D.A2M],
+    ['A','Bearing bar shear / combined stress / local bearing','Point load',Math.max(D.A2V,D.A2VM,D.A2F)],
+    ['A','Bearing bar bending','Point load at free edge',D.A3M,E],
+    ['A','Bearing bar bending','Wheel on a bar, midspan',D.A4M],
+    ['A','Bearing bar shear / combined stress / local bearing','Wheel',Math.max(D.A4V,D.A4VM,D.A4F)],
+    ['A','Bearing bar bending','Wheel at free edge',D.A5M,E],
+    ['B','Crossbar bending from load sharing','Point load on a bar',D.B1pM],
+    ['B','Crossbar bending from load sharing','Wheel on a bar',D.B1wM],
+    ['B','Crossbar shear from load sharing','Point / wheel',D.B1V],
+    ['B','Crossbar bending between bars','UDL',D.B2uM],
+    ['B','Crossbar bending / shear between bars',`Point load (${D.B2p.nn} crossbars under footprint)`,Math.max(D.B2p.M,D.B2p.V,D.B2p.VM)],
+    ['B','Crossbar bending / shear between bars',`Wheel (${D.B2w.nn} crossbars under footprint)`,Math.max(D.B2w.M,D.B2w.V,D.B2w.VM)],
+    ['C','Bar–crossbar joint force','Governing',D.C],
+    ['D','Deflection',`UDL (limit ${fmt(D.limq,1)} mm)`,D.D1],
+    ['D','Deflection',`Point load (limit ${fmt(D.limP,1)} mm)`,D.D2],
+    ['D','Deflection','Point load at free edge',D.D3,E],
+    ['D','Deflection','Wheel',D.D4],
+    ['D','Deflection','Wheel at free edge',D.D5,E],
+    ['–','Openings / web slenderness / inputs','Geometry',D.Ugeo],
+  ];
+  const act=checks.filter(c=>!c[4]); const gov=act.reduce((m,c)=>c[3]>m[3]?c:m,act[0]);
+  const pass=D.Umax<=1;
+  const names={A:'Bearing bars',B:'Crossbars',C:'Joints',D:'Deflection'};
+  const grp=k=>{ const cs=act.filter(c=>c[0]===k); return cs.reduce((m,c)=>c[3]>m[3]?c:m,cs[0]); };
+  let html=`<div class="verdict ${pass?'':'bad'}"><div class="big">${D.Umax.toFixed(2)}<small>max utilisation</small></div>
+   <div><h2>${pass?'The grating passes all checks':'The grating does not pass'}</h2><p>Governing: ${gov[1].toLowerCase()} — ${gov[2].toLowerCase()} (${gov[3].toFixed(3)}). Utilisation up to 1.00 is acceptable.</p></div></div>`;
+  html+=`<section class="blk"><h3>Result by component</h3><div class="groups">`+['A','B','C','D'].map(k=>{const c=grp(k);return `<div class="g"><div class="t">${names[k]}</div><div class="v" style="color:${c[3]>1?'var(--bad)':'var(--ok)'}">${c[3].toFixed(2)}</div><div class="w">${c[2]}</div><div class="bar"><i class="${c[3]>1?'bad':''}" style="width:${Math.min(c[3]/1.5,1)*100}%"></i></div></div>`}).join('')+`</div></section>`;
+  html+=`<section class="blk"><h3>How the wheel load is shared</h3><p class="lead">The bar under the load carries ${(D.psiW*100).toFixed(1)} % of the wheel (effective width ${Math.round(I.a/D.psiW)} mm) and ${(D.psiP*100).toFixed(1)} % of the point load (effective width ${Math.round(I.a/D.psiP)} mm). Crossbars spread the rest to neighbouring bars.</p><div class="diagram">${diagram(I,R)}</div></section>`;
+  let t=''; let last='';
+  checks.forEach(c=>{ if(c[0]!==last){ last=c[0]; t+=`<tr class="grp"><td colspan="4">${c[0]==='–'?'Other':c[0]+'. '+names[c[0]]}</td></tr>`;} t+=row(c[1],c[2],c[3],c[4]); });
+  html+=`<section class="blk"><h3>All checks</h3><div class="tbl"><table><thead><tr><th>Check</th><th>Load case / position</th><th class="n">Utilisation</th><th>Status</th></tr></thead><tbody>${t}</tbody></table></div></section>`;
+  html+=`<section class="blk"><h3>Deflection</h3><div class="tbl"><table><thead><tr><th>Case</th><th class="n">Deflection (mm)</th><th class="n">Limit (mm)</th><th>Status</th></tr></thead><tbody>
+    <tr><td>UDL</td><td class="n">${fmt(D.dq,2)}</td><td class="n">${fmt(D.limq,2)}</td><td>${status(D.D1)}</td></tr>
+    <tr><td>Point load, interior</td><td class="n">${fmt(D.Sp.di,2)}</td><td class="n">${fmt(D.limP,2)}</td><td>${status(D.D2)}</td></tr>
+    <tr><td>Point load, free edge</td><td class="n">${fmt(D.Sp.de,2)}</td><td class="n">${fmt(D.limP,2)}</td><td>${status(D.D3,E)}</td></tr>
+    <tr><td>Wheel, interior</td><td class="n">${fmt(D.Sw.di,2)}</td><td class="n">${fmt(D.limP,2)}</td><td>${status(D.D4)}</td></tr>
+    <tr><td>Wheel, free edge</td><td class="n">${fmt(D.Sw.de,2)}</td><td class="n">${fmt(D.limP,2)}</td><td>${status(D.D5,E)}</td></tr></tbody></table></div></section>`;
+  const tr=R.trials.map(x=>`<tr><td class="n">${fmt(x.c,1)}${Math.abs(x.c-I.c)<1e-9?' (current)':''}</td><td class="n">${x.Ncb}</td><td class="n">${x.UA.toFixed(3)}</td><td class="n">${x.UB.toFixed(3)}</td><td class="n">${x.UC.toFixed(3)}</td><td class="n">${x.UD.toFixed(3)}</td><td class="n"><b>${x.Umax.toFixed(3)}</b></td><td>${status(x.Umax)}</td></tr>`).join('');
+  const rec=R.cRec?`The largest spacing that passes every check is <b>${fmt(R.cRec,1)} mm</b>, needing <b>${R.nRec}</b> crossbars per ${fmt(R.Lp,0)} mm panel. Round down to the manufacturer's standard pitch.`:`None of these spacings passes every check. Look at which column stays above 1.00: crossbar and joint failures can be fixed by closer crossbars; bearing-bar and deflection failures need a heavier or closer-spaced bearing bar, or load-sharing at panel joints.`;
+  html+=`<section class="blk"><h3>Crossbar spacing</h3><p class="lead">${rec}</p><div class="tbl"><table><thead><tr><th class="n">Spacing (mm)</th><th class="n">Crossbars</th><th class="n">Bearing bars</th><th class="n">Crossbars</th><th class="n">Joints</th><th class="n">Deflection</th><th class="n">Max</th><th>Status</th></tr></thead><tbody>${tr}</tbody></table></div></section>`;
+  const kv=[['Wheel load used',fmt(R.Pw_kg,1)+' kg'],['Grating self-weight',fmt(R.gsw,1)+' kg/m²'],['Design UDL, qEd',(R.qEd*1e6/9.81).toFixed(0)+' kg/m²'],['Design point load',fmt(R.PpEd,1)+' N'],['Design wheel load',fmt(R.PwEd,1)+' N'],
+   ['Bearing bars in panel',R.Nbb],['Crossbars in panel',R.Ncb],['Bar stiffness per width, Dx',fmt(R.Dx,0)+' N·mm'],['Crossbar stiffness per length, Dy',fmt(R.Dy,0)+' N·mm'],['Load spread width (1st mode)',fmt(R.beff1,0)+' mm'],
+   ['Bar bending resistance, Mb,Rd',fmt(R.MbRd,0)+' N·mm'],['Lateral buckling factor, χLT',R.chi.toFixed(3)],['Bar shear resistance',fmt(R.VRd,0)+' N'],['Crossbar bending resistance',fmt(R.MbRd1,1)+' N·mm'],['Crossbar shear resistance',fmt(R.VRd1,1)+' N'],['Joint resistance',fmt(R.FjRd,1)+' N']];
+  html+=`<section class="blk"><h3>Key values</h3><div class="kv">${kv.map(k=>`<div><span>${k[0]}</span><span>${k[1]}</span></div>`).join('')}</div></section>`;
+  html+=`<section class="blk"><p class="note">Assumptions: bearing bars simply supported on rigid line supports; crossbars fully connected at every joint; point and wheel loads act alone (not with the UDL); loads at midspan for bending and deflection, next to the support for shear. Free-edge results are conservative by roughly 25–35 %. For cut-outs, point supports, several interacting wheels or large crossbar spacing, use a grillage or finite-element model.</p></section>`;
+  out.innerHTML=html;
+}
+let tmr; document.getElementById('frm').addEventListener('input',()=>{clearTimeout(tmr);tmr=setTimeout(render,120);});
+document.getElementById('frm').addEventListener('change',render);
+$('print').addEventListener('click',()=>window.print());
+$('reset').addEventListener('click',()=>{ ids.forEach(i=>$(i).value=defaults[i]); $('equip').value=defaults.equip; $('edge').checked=defaults.edge; $('adj').checked=defaults.adj; $('trials').value=defaults.trials; render(); });
+render();
+})();
+</script>
+</body>
+</html>
