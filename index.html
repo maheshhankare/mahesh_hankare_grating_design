@@ -109,17 +109,17 @@ footer{padding:18px 32px;color:var(--muted);font-size:12.5px;border-top:1px soli
     <div class="f"><label for="b1">Crossbar thickness, b1<small>mm</small></label><input id="b1" type="number" step="any" value="1.6"></div>
     <div class="f"><label for="c">Crossbar spacing (c/c), c<small>mm</small></label><input id="c" type="number" step="any" value="11"></div>
     <div class="f"><label for="L">Clear span of bearing bars, L<small>mm, support to support</small></label><input id="L" type="number" step="any" value="1200"></div>
-    <div class="f"><label for="fy">Steel yield strength, fy<small>N/mm²</small></label><input id="fy" type="number" step="any" value="235"></div>
+    <div class="f"><label for="fy">Steel yield strength, fy<small>N/mm²</small></label><input id="fy" type="number" step="any" value="250"></div>
   </details>
   <details class="grp" open><summary>Loads</summary>
     <div class="f"><label for="UDL">Uniformly distributed load<small>kg/m²</small></label><input id="UDL" type="number" step="any" value="900"></div>
     <div class="f"><label for="Pp">Point load<small>kg</small></label><input id="Pp" type="number" step="any" value="100"></div>
-    <div class="pair"><label>Point load footprint<small>length along bars × width across, mm</small></label><input id="Bpx" type="number" step="any" value="100" aria-label="Point footprint length"><input id="Bpy" type="number" step="any" value="50" aria-label="Point footprint width"></div>
-    <div class="f"><label for="equip">Moving equipment</label><select id="equip"><option value="HPT">Hand pallet truck (3 wheels)</option><option value="OTHER">Other (4 wheels)</option></select></div>
+    <div class="pair"><label>Point load footprint<small>length along bars × width across, mm</small></label><input id="Bpx" type="number" step="any" value="100" aria-label="Point footprint length"><input id="Bpy" type="number" step="any" value="100" aria-label="Point footprint width"></div>
+    <div class="f"><label for="equip">Moving equipment</label><select id="equip"><option value="OTHER" selected>Trolley (4 wheels)</option><option value="HPT">Hand pallet truck (3 wheels)</option></select></div>
     <div class="f"><label for="Qeq">Load on equipment<small>kg, excluding self-weight</small></label><input id="Qeq" type="number" step="any" value="400"></div>
     <div class="f"><label for="SWeq">Equipment self-weight<small>kg</small></label><input id="SWeq" type="number" step="any" value="100"></div>
     <div class="f"><label for="wheelOverride">Wheel load override<small>kg, 0 = calculate from equipment</small></label><input id="wheelOverride" type="number" step="any" value="0"></div>
-    <div class="pair"><label>Wheel footprint<small>length along bars × width across, mm</small></label><input id="Bwx" type="number" step="any" value="25" aria-label="Wheel footprint length"><input id="Bwy" type="number" step="any" value="25" aria-label="Wheel footprint width"></div>
+    <div class="pair"><label>Wheel footprint<small>length along bars × width across, mm</small></label><input id="Bwx" type="number" step="any" value="50" aria-label="Wheel footprint length"><input id="Bwy" type="number" step="any" value="50" aria-label="Wheel footprint width"></div>
   </details>
   <details class="grp" open><summary>Safety factors</summary>
     <div class="f"><label for="gQ">Imposed load factor, γQ</label><input id="gQ" type="number" step="any" value="1.5"></div>
@@ -130,7 +130,7 @@ footer{padding:18px 32px;color:var(--muted);font-size:12.5px;border-top:1px soli
   <details class="grp"><summary>Panel and support</summary>
     <div class="f"><label for="Wp">Panel width across bars<small>mm</small></label><input id="Wp" type="number" step="any" value="1000"></div>
     <div class="f"><label for="ls">Seating length each end<small>mm</small></label><input id="ls" type="number" step="any" value="30"></div>
-    <label class="tog"><input id="edge" type="checkbox" checked><span>Loads can reach a free panel edge or unconnected panel joint</span></label>
+    <label class="tog"><input id="edge" type="checkbox"><span>Loads can reach a free panel edge or unconnected panel joint<br><small style="color:var(--muted)">Untick when panels are clipped together at the joints</small></span></label>
     <label class="tog"><input id="adj" type="checkbox"><span>Second wheel alongside on the same panel</span></label>
     <div class="f"><label for="s">Wheel spacing across bars (c/c)<small>mm</small></label><input id="s" type="number" step="any" value="400"></div>
   </details>
@@ -394,9 +394,9 @@ function render(){
   html+=`<section class="blk"><h3>Crossbar spacing</h3><p class="lead">${rec}</p><div class="tbl"><table><thead><tr><th class="n">Spacing (mm)</th><th class="n">Crossbars</th><th class="n">Bearing bars</th><th class="n">Crossbars</th><th class="n">Joints</th><th class="n">Deflection</th><th class="n">Max</th><th>Status</th></tr></thead><tbody>${tr}</tbody></table></div></section>`;
   const kv=[['Wheel load used',fmt(R.Pw_kg,1)+' kg'],['Grating self-weight',fmt(R.gsw,1)+' kg/m²'],['Design UDL, qEd',(R.qEd*1e6/9.81).toFixed(0)+' kg/m²'],['Design point load',fmt(R.PpEd,1)+' N'],['Design wheel load',fmt(R.PwEd,1)+' N'],
    ['Bearing bars in panel',R.Nbb],['Crossbars in panel',R.Ncb],['Bar stiffness per width, Dx',fmt(R.Dx,0)+' N·mm'],['Crossbar stiffness per length, Dy',fmt(R.Dy,0)+' N·mm'],['Load spread width (1st mode)',fmt(R.beff1,0)+' mm'],
-   ['Bar bending resistance, Mb,Rd',fmt(R.MbRd,0)+' N·mm'],['Lateral buckling factor, χLT',R.chi.toFixed(3)],['Bar shear resistance',fmt(R.VRd,0)+' N'],['Crossbar bending resistance',fmt(R.MbRd1,1)+' N·mm'],['Crossbar shear resistance',fmt(R.VRd1,1)+' N'],['Joint resistance',fmt(R.FjRd,1)+' N']];
+   ['Bar bending resistance, Mb,Rd',fmt(R.MbRd,0)+' N·mm'],['Lateral buckling factor, χLT',R.chi.toFixed(3)],['Bar shear resistance',fmt(R.VRd,0)+' N'],['Crossbar bending resistance',fmt(R.MbRd1,1)+' N·mm'],['Crossbar shear resistance',fmt(R.VRd1,1)+' N'],['Joint resistance',fmt(R.FjRd,1)+' N'],['Panel joints',I.edge?'Free edge (unclipped)':'Clipped / load-shared'],['Required design force per joint clip',I.edge?'–':fmt(Math.max(R.PwEd,R.PpEd)/2,1)+' N']];
   html+=`<section class="blk"><h3>Key values</h3><div class="kv">${kv.map(k=>`<div><span>${k[0]}</span><span>${k[1]}</span></div>`).join('')}</div></section>`;
-  html+=`<section class="blk"><p class="note">Assumptions: bearing bars simply supported on rigid line supports; crossbars fully connected at every joint; point and wheel loads act alone (not with the UDL); loads at midspan for bending and deflection, next to the support for shear. Free-edge results are conservative by roughly 25–35 %. For cut-outs, point supports, several interacting wheels or large crossbar spacing, use a grillage or finite-element model.</p></section>`;
+  html+=`<section class="blk"><p class="note">Assumptions: bearing bars simply supported on rigid line supports; crossbars fully connected at every joint; point and wheel loads act alone (not with the UDL); loads at midspan for bending and deflection, next to the support for shear. Free-edge results are conservative by roughly 25–35 %. When panels are clipped, each clip at a joint crossed by wheels must carry at least half the design wheel or point load (shown under Key values). For cut-outs, point supports, several interacting wheels or large crossbar spacing, use a grillage or finite-element model.</p></section>`;
   out.innerHTML=html;
 }
 let tmr; document.getElementById('frm').addEventListener('input',()=>{clearTimeout(tmr);tmr=setTimeout(render,120);});
